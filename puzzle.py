@@ -4,9 +4,11 @@ import math
 import random
 
 pygame.init()
-width, height = 501, 501
+width, height = 500, 500
 screen = pygame.display.set_mode((width, height))
 
+cursor1 = pygame.image.load('cursor.png')
+cursor2 = pygame.image.load('cursor2.png')
 cursor = pygame.image.load('cursor.png')
 clock = pygame.time.Clock()
 blue = pygame.image.load('blue.png')
@@ -14,67 +16,73 @@ green = pygame.image.load('green.png')
 purple = pygame.image.load('purple.png')
 red = pygame.image.load('red.png')
 yellow = pygame.image.load('yellow.png')
+empty = pygame.image.load('empty.png')
 # mouse = pygame.image.load('resources/images/arrow.png')
 keys = [False, False, False, False]
 cursorpos = [0,0]
-blocks = [blue, green, purple, red, yellow]
+blocks = [blue, green, purple, red, yellow, empty, empty, empty, empty, empty]
 blocksdrawn = False
+spacetrigger = False
+blockcount = 0
 
 class Block(object):
 	def __init__(self, x, y):
-		self.color = blocks[random.randint(0,4)]
+		self.color = blocks[random.randint(0,9)]
 		self.position = [50*x,50*y]
-# if(blocksdrawn is False):
-# 	for x in range(0,9):
-# 		currentblock[x] = Block()
-# 		currentblock[x].position = [50*x,0]
-# 	blocksdrawn = True
+
+def checkPositionOverflow_x(direction):
+	if cursorpos[0]+50*direction>=0 and cursorpos[0]+50*direction<250:
+		return True
+	else:
+		return False
+def checkPositionOverflow_y(direction):
+	if cursorpos[1]+50*direction>=0 and cursorpos[1]+50*direction<500:
+		return True
+	else:
+		return False
+def switchBlocks(indeces):
+
+	block_x = indeces[0]
+	block_y = indeces[1]
+	temp=currentblock[block_x+1][block_y].color
+	currentblock[block_x+1][block_y].color = currentblock[block_x][block_y].color
+	currentblock[block_x][block_y].color = temp
+
 currentblock = [x for x in range(0,6)]
 for x in range (0,6):
 	currentblock[x]= [y for y in range(0,10)]
 	for y in range(0,10):
 		currentblock[x][y]=Block(x,y)
-
-while 1:
-
-	# for x in range(width/grass.get_width()+1):
-	# 	for y in range(height/grass.get_height()+1):
-	# 		screen.blit(grass,(x*100, y*100))
-	screen.fill(0)
-
+def redraw():
 	for x in range(0,6):
 		for y in range(0,10):
 			screen.blit(currentblock[x][y].color,currentblock[x][y].position)
+font = pygame.font.Font(None, 36)
+text = font.render('asdf',1,(255,255,255))
+def writePosition():
+	font = pygame.font.Font(None, 36)
+	text = font.render(str(cursorpos[0]%50)+" "+str(cursorpos[1]%50), 1, (255,255,255))
+	screen.blit(text,[500,0])
+
+def getBlock():
+	for x in range(0,6):
+		for y in range(0,10):
+			if currentblock[x][y].position == cursorpos:
+				return [x,y]
+
+def drawCursor():
+	if int(pygame.time.get_ticks())%1000 <500:
+		cursor = cursor1
+	else:
+		cursor = cursor2
 	screen.blit(cursor,cursorpos)
-	# for bullet in arrows:
-	# 	index=0
-	# 	velx=math.cos(bullet[0])*10
-	# 	vely=math.sin(bullet[0])*10
-	# 	bullet[1]+=velx
-	# 	bullet[2]+=vely
-	# 	if bullet[1]<-64 or bullet[1]>500 or bullet[2]<-64 or bullet[2]>500:
-	# 		arrows.pop(index)
-	# 	index+=1
-	# 	for projectile in arrows:
-	# 		arrow1=pygame.transform.rotate(arrow, 360-projectile[0]*57.29)
-	# 		screen.blit(arrow1, (projectile[1], projectile[2]))
-	# if badtimer==0:
-	# 	badguys.append([500, random.randint(50,500)])
-	# 	badtimer=100-(badtimer1*2)
-	# 	if badtimer1>=35:
-	# 		badtimer1-35
-	# 	else:
-	# 		badtimer1+=5
-	# index=0
-	# for badguy in badguys:
-	# 	if badguy[0]<-64:
-	# 		badguys.pop(index)
-	# 	badguy[0]-=7
-	# 	index+=1
-	# for badguy in badguys:
-	# 	screen.blit(badguyimg, badguy)
-	# screen.blit(mouse, mousepos)
-	# badtimer-=1
+while 1:
+
+	screen.fill(0)
+	screen.blit(text,[300,0])
+
+	redraw()
+ 	drawCursor()
 	pygame.display.flip()
 	clock.tick(30)
 	for event in pygame.event.get():
@@ -99,15 +107,26 @@ while 1:
 				keys[2] = False
 			elif event.key == K_d:
 				keys[3] = False
+			elif event.key==K_SPACE:
+				spacetrigger = True
 	if keys[0]:
-		cursorpos[1]-=50
+		if checkPositionOverflow_y(-1):
+			cursorpos[1]-=50
 		keys[0]=False
 	elif  keys[2]:
-		cursorpos[1]+=50
+		if checkPositionOverflow_y(1):
+			cursorpos[1]+=50
 		keys[2]=False
 	elif keys[1]:
-		cursorpos[0]-=50
+		if checkPositionOverflow_x(-1):
+			cursorpos[0]-=50
 		keys[1]=False
 	elif keys[3]:
-		cursorpos[0]+=50
+		if checkPositionOverflow_x(1):
+			cursorpos[0]+=50
 		keys[3]=False
+	elif spacetrigger:
+		xy = getBlock()
+		switchBlocks(xy)
+		spacetrigger = False
+
