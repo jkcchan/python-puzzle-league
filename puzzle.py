@@ -20,14 +20,14 @@ empty = pygame.image.load('empty.png')
 # mouse = pygame.image.load('resources/images/arrow.png')
 keys = [False, False, False, False]
 cursorpos = [0,0]
-blocks = [blue, green, purple, red, yellow, empty, empty, empty, empty, empty]
+blocks = [blue, green, purple, red, yellow, empty, empty]
 blocksdrawn = False
 spacetrigger = False
 blockcount = 0
 
 class Block(object):
 	def __init__(self, x, y):
-		self.color = blocks[random.randint(0,9)]
+		self.color = blocks[random.randint(0,len(blocks)-1)]
 		self.position = [50*x,50*y]
 
 def checkPositionOverflow_x(direction):
@@ -54,6 +54,7 @@ for x in range (0,6):
 	for y in range(0,10):
 		currentblock[x][y]=Block(x,y)
 def redraw():
+	implementGravity()
 	for x in range(0,6):
 		for y in range(0,10):
 			screen.blit(currentblock[x][y].color,currentblock[x][y].position)
@@ -76,13 +77,31 @@ def drawCursor():
 	else:
 		cursor = cursor2
 	screen.blit(cursor,cursorpos)
+def implementGravity():
+	for y in range(0,9):
+		for x in range(0,6):
+			if currentblock[x][y+1]:
+				if currentblock[x][y+1].color==empty and currentblock[x][y].color!=empty:
+					currentblock[x][y+1].color = currentblock[x][y].color
+					currentblock[x][y].color = empty
+def horizontalCheck():
+	for y in range(0,10):
+		counter=0
+		for x in range(0,5):
+			if currentblock[x][y].color!=empty and currentblock[x][y].color==currentblock[x+1][y].color:
+				counter+=1				
+			else:
+				if counter>=2:
+					for n in range(0,counter+1):
+						currentblock[x-n][y].color=empty
+				counter=0
+initchecked = False	
 while 1:
-
 	screen.fill(0)
 	screen.blit(text,[300,0])
-
 	redraw()
  	drawCursor()
+ 	horizontalCheck()
 	pygame.display.flip()
 	clock.tick(30)
 	for event in pygame.event.get():
